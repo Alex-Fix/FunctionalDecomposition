@@ -212,23 +212,24 @@ namespace UI
             var isValid = ValidateAllMatrixes();
             if (!isValid)
                 return;
-            
-            using(var stream = new StreamWriter("matrixes.txt"))
+
+            using (var stream = new StreamWriter("matrixes.txt", false, Encoding.ASCII))
             {
+
                 var sb = new StringBuilder();
                 sb.AppendLine(((int)DimensionNUD.Value).ToString());
                 foreach (var row in MatrixA)
-                    sb.AppendLine(string.Join("|", row));
+                    sb.AppendLine(string.Join("\r\n", row));
                 foreach (var row in MatrixA1)
-                    sb.AppendLine(string.Join("|", row));
+                    sb.AppendLine(string.Join("\r\n", row));
                 foreach (var row in MatrixA2)
-                    sb.AppendLine(string.Join("|", row));
+                    sb.AppendLine(string.Join("\r\n", row));
                 foreach (var row in MatrixB2)
-                    sb.AppendLine(string.Join("|", row));
+                    sb.AppendLine(string.Join("\r\n", row));
                 foreach (var row in MatrixB1)
-                    sb.AppendLine(string.Join("|", row));
+                    sb.AppendLine(string.Join("\r\n", row));
                 foreach (var row in MatrixC1)
-                    sb.AppendLine(string.Join("|", row));
+                    sb.AppendLine(string.Join("\r\n", row));
 
                 stream.Write(sb.ToString());
             }
