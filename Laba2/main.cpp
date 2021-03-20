@@ -1,5 +1,8 @@
+#include "mpi.h"
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include<utility>
 using namespace std;
 
 // input data
@@ -59,7 +62,7 @@ void fill_matrix_zeros(T**& matrix, int row, int column);
 void create_input_matrixes();
 void fill_matrix(int**& matrix, int column, ifstream& file);
 void fill_matrixes(ifstream& file);
-void create_and_fill_input_matrixes(char* fileName);
+void create_and_fill_input_matrixes(const char* fileName);
 void delete_matrixes();
 void create_matrix_b();
 void create_matrix_y1();
@@ -83,9 +86,39 @@ void create_matrix_temp14();
 void create_matrix_X();
 void calculate_sync(char* fileName);
 void print_matrixes();
+void save_time(int procRank, long long nanoseconds);
+void do_process0();
+void do_process1();
+void do_process2();
 
 int main(int argc, char *argv[]) {
-	calculate_sync(argv[1]);
+	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+	
+	int ProcNum, ProcRank;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_size(MPI_COMM_WORLD, &ProcNum);
+	MPI_Comm_rank(MPI_COMM_WORLD, &ProcRank);
+	
+	switch (ProcRank)
+	{
+	case 0:
+		do_process0();
+		break;
+	case 1:
+		do_process1();
+		break;
+	case 2:
+		do_process2();
+		break;
+	default:
+		break;
+	}
+	
+	MPI_Finalize();
+
+	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
+	save_time(ProcRank, chrono::duration_cast<chrono::nanoseconds>(end - start).count());
+
 	return 0;
 }
 
@@ -208,7 +241,7 @@ void fill_matrixes(ifstream& file) {
 	fill_matrix(matrix_C1, 1, file);
 }
 
-void create_and_fill_input_matrixes(char* fileName) {
+void create_and_fill_input_matrixes(const char* fileName) {
 	ifstream file;
 	file.open(fileName);
 	file >> dimention;
@@ -437,3 +470,196 @@ void calculate_sync(char* fileName) {
 	delete_matrixes();
 }
 
+void save_time(int procRank, long long nanoseconds) {
+	ofstream file;
+
+	switch (procRank)
+	{
+	case 0:
+		file.open("time0.txt", fstream::out);
+		break;
+	case 1:
+		file.open("time1.txt", fstream::out);
+		break;
+	case 2:
+		file.open("time2.txt", fstream::out);
+		break;
+	default:
+		break;
+	}
+	
+	file << nanoseconds;
+
+	file.close();
+}
+
+void do_process0() {
+	create_and_fill_input_matrixes("matrixes.txt");
+	MPI_Status status;
+	int tag1 = 0, tag2 = 0;
+
+	MPI_Send(&dimention, 1, MPI_INT, 1, tag1++, MPI_COMM_WORLD);
+	MPI_Send(&dimention, 1, MPI_INT, 2, tag2++, MPI_COMM_WORLD);
+	
+	for(int i = 0 ; i < dimention; i++)
+		MPI_Send(matrix_B1[i], 1, MPI_INT, 1, tag1++, MPI_COMM_WORLD);
+
+	for(int i = 0; i < dimention; i++)
+		MPI_Send(matrix_B2[i], dimention , MPI_INT, 2, tag2++, MPI_COMM_WORLD);
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_C1[i], 1, MPI_INT, 1, tag1++, MPI_COMM_WORLD);
+		
+	
+	for(int i = 0; i < dimention; i++)
+		MPI_Send(matrix_A2[i], dimention, MPI_INT, 2, tag2++, MPI_COMM_WORLD);
+	
+	create_matrix(matrix_B, dimention, 1);
+
+	for(int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_B[i], 1, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD, &status);
+	
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_A1, dimention, MPI_INT, 1, tag1++, MPI_COMM_WORLD);
+
+	create_matrix_y1();
+	create_matrix_temp7();
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_Y1[i], 1, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_Y1[i], 1, MPI_DOUBLE, 2, tag2++, MPI_COMM_WORLD);
+
+	create_matrix(matrix_temp6, dimention, 1);
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_temp6[i], 1, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD, &status);
+
+	create_matrix_temp8();
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_temp8[i], dimention, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
+}
+
+void do_process1() {
+	MPI_Status status;
+	int tag0 = 0;
+	int tag2 = 0;
+
+	MPI_Recv(&dimention, 1, MPI_INT, 0, tag0++, MPI_COMM_WORLD, &status);
+
+	create_matrix_b();
+	create_matrix(matrix_B1, dimention, 1);
+
+	for(int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_B1[i], 1, MPI_INT, 0, tag0++, MPI_COMM_WORLD, &status);
+
+	create_matrix_temp1();
+	create_matrix(matrix_C1, dimention, 1);
+
+	for (int i = 0; i < dimention; i++) 
+		MPI_Recv(matrix_C1[i], 1, MPI_INT, 0, tag0++, MPI_COMM_WORLD, &status);
+		
+	create_matrix_temp2();
+
+	for(int i = 0; i < dimention; i++)
+		MPI_Send(matrix_B[i], 1, MPI_DOUBLE, 0, tag0++, MPI_COMM_WORLD);
+
+	create_matrix(matrix_A1, dimention, dimention);
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_A1[i], dimention, MPI_INT, 0, tag0++, MPI_COMM_WORLD, &status);
+
+	create_matrix_y2();
+
+	create_matrix(matrix_temp4, dimention, dimention);
+	create_matrix(matrix_Y1, dimention, 1);
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_temp4[i], dimention, MPI_DOUBLE, 2, tag2++, MPI_COMM_WORLD, &status);
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_Y1[i], 1, MPI_DOUBLE, 0, tag0++, MPI_COMM_WORLD, &status);
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_Y2, 1, MPI_INT, 2, tag2++, MPI_COMM_WORLD);
+
+	create_vatrix_temp5();
+	create_matrix_temp6();
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_temp6[i], 1, MPI_DOUBLE, 0, tag0++, MPI_COMM_WORLD);
+
+	create_matrix(matrix_temp8, dimention, dimention);
+	
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_temp8[i], dimention, MPI_DOUBLE, 0, tag0++, MPI_COMM_WORLD, &status);
+
+	create_matrix(matrix_Y3, dimention, dimention);
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_Y3[i], dimention, MPI_DOUBLE, 2, tag2++, MPI_COMM_WORLD, &status);
+
+	create_matrix_temp9();
+
+	create_matrix(matrix_temp11, dimention, dimention);
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_temp11[i], dimention, MPI_DOUBLE, 2, tag2++, MPI_COMM_WORLD, &status);
+
+	create_matrix_temp12();
+	create_matrix_temp13();
+	create_matrix_temp14();
+
+	create_matrix(matrix_temp10, 1, dimention);
+
+	MPI_Recv(matrix_temp10[0], dimention, MPI_DOUBLE, 2, tag2++, MPI_COMM_WORLD, &status);
+
+	create_matrix_X();
+
+	print_matrix(matrix_X, 1, dimention);
+}
+
+void do_process2() {
+	MPI_Status status;
+	int tag0 = 0, tag1 = 0;
+
+	MPI_Recv(&dimention, 1, MPI_INT, 0, tag0++, MPI_COMM_WORLD, &status);
+	
+	create_matrix_c2();
+	create_matrix(matrix_B2, dimention, dimention);
+
+	for(int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_B2[i], dimention, MPI_INT, 0, tag0++, MPI_COMM_WORLD, &status);
+	
+	create_matrix_temp3();
+	create_matrix(matrix_A2, dimention, dimention);
+	
+	for(int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_A2[i], dimention, MPI_INT, 0, tag0++, MPI_COMM_WORLD, &status);
+
+	create_matrix_y3();
+	create_matrix_temp4();
+	
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_temp4[i], dimention, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
+
+	create_matrix(matrix_Y2, dimention, 1);
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_Y2[i], 1, MPI_INT, 1, tag1++, MPI_COMM_WORLD, &status);
+
+	create_matrix_temp10();
+	create_matrix(matrix_Y1, dimention, 1);
+	
+	for (int i = 0; i < dimention; i++)
+		MPI_Recv(matrix_Y1[i], 1, MPI_DOUBLE, 0, tag0++, MPI_COMM_WORLD, &status);
+
+	create_matrix_temp11();
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_Y3[i], dimention, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
+
+	for (int i = 0; i < dimention; i++)
+		MPI_Send(matrix_temp11[i], dimention, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
+
+	MPI_Send(matrix_temp10[0], dimention, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
+}
