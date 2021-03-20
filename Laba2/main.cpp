@@ -95,6 +95,7 @@ void do_process2();
 void delete_matrix_process0();
 void delete_matrix_process1();
 void delete_matrix_process2();
+void print_result_to_file();
 
 int main(int argc, char *argv[]) {
 	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
@@ -611,6 +612,13 @@ void print_matrix_process2() {
 	file.close();
 }
 
+void print_result_to_file() {
+	ofstream file;
+	file.open("result.txt");
+	print_matrix_to_file(&file, matrix_X, 1, dimention);
+	file.close();
+}
+
 void delete_matrix_process0() {
 	delete_matrix(matrix_A, dimention);
 	delete_matrix(matrix_A1, dimention);
@@ -786,7 +794,7 @@ void do_process1() {
 
 	create_matrix_X();
 
-	
+	print_result_to_file();
 	print_matrix_process1();
 	delete_matrix_process1();
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -233,6 +234,32 @@ namespace UI
 
                 stream.Write(sb.ToString());
             }
+
+            Process.Start("mpiexec", " -n 3 Laba2").WaitForExit();
+
+            string result = "X = ";
+            using (var stream = new StreamReader("result.txt"))
+                result += stream.ReadToEnd();
+
+            long maxTime = 0;
+            using (var stream = new StreamReader("time0.txt"))
+                maxTime = long.Parse(stream.ReadToEnd());
+            using (var stream = new StreamReader("time1.txt"))
+            {
+                var maxTime2 = long.Parse(stream.ReadToEnd());
+                if (maxTime < maxTime2)
+                    maxTime = maxTime2;
+            }
+            using (var stream = new StreamReader("time2.txt"))
+            {
+                var maxTime3 = long.Parse(stream.ReadToEnd());
+                if (maxTime < maxTime3)
+                    maxTime = maxTime3;
+            }
+
+            result += "Max time = " + (maxTime/1000).ToString()+ " ms";
+
+            MessageBox.Show(result);
         }
     }
 }
