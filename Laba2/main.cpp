@@ -45,6 +45,8 @@ template<typename T>
 void delete_matrix(T**& matrix, int row);
 template<typename T>
 void print_matrix(T**& matrix, int row, int column);
+template<typename T>
+void print_matrix_to_file(ofstream *file, T**& matrix, int row, int column);
 template<typename IN1, typename IN2, typename OUT>
 OUT** matrix_add(IN1** matrixA, IN2** matrixB, int row, int column);
 template<typename IN1, typename IN2, typename OUT>
@@ -90,6 +92,9 @@ void save_time(int procRank, long long nanoseconds);
 void do_process0();
 void do_process1();
 void do_process2();
+void delete_matrix_process0();
+void delete_matrix_process1();
+void delete_matrix_process2();
 
 int main(int argc, char *argv[]) {
 	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
@@ -144,6 +149,16 @@ void print_matrix(T**& matrix, int row, int column) {
 		for (int j = 0; j < column; j++)
 			cout << matrix[i][j] << " ";
 		cout << endl;
+	}
+}
+
+template<typename T>
+void print_matrix_to_file(ofstream *file, T**& matrix, int row, int column) {
+	for (int i = 0; i < row; i++)
+	{
+		for (int j = 0; j < column; j++)
+			*file << matrix[i][j] << " ";
+		*file << endl;
 	}
 }
 
@@ -253,7 +268,7 @@ void create_and_fill_input_matrixes(const char* fileName) {
 }
 
 void delete_matrixes() {
-	delete_matrix<int>(matrix_A, dimention);
+	delete_matrix<int>(matrix_A, dimention);									
 	delete_matrix<int>(matrix_A1, dimention);
 	delete_matrix<int>(matrix_A2, dimention);
 	delete_matrix<int>(matrix_B2, dimention);
@@ -493,6 +508,159 @@ void save_time(int procRank, long long nanoseconds) {
 	file.close();
 }
 
+void print_matrix_process0() {
+	ofstream file;
+	file.open("process0.txt");
+	file << "matrix_A" << endl;
+	print_matrix_to_file(&file, matrix_A, dimention, dimention);
+	file << endl << "matrix_A1" << endl;
+	print_matrix_to_file(&file, matrix_A1, dimention, dimention);
+	file << endl << "matrix_A2" << endl;
+	print_matrix_to_file(&file, matrix_A2, dimention, dimention);
+	file << endl << "matrix_B2" << endl;
+	print_matrix_to_file(&file, matrix_B2, dimention, dimention);
+	file << endl << "matrix_B1" << endl;
+	print_matrix_to_file(&file, matrix_B1, dimention, 1);
+	file << endl << "matrix_C1" << endl;
+	print_matrix_to_file(&file, matrix_C1, dimention, 1);
+	file << endl << "matrix_B" << endl;
+	print_matrix_to_file(&file, matrix_B, dimention, 1);
+	file << endl << "matrix_Y1" << endl;
+	print_matrix_to_file(&file, matrix_Y1, dimention, 1);
+	file << endl << "matrix_temp7" << endl;
+	print_matrix_to_file(&file, matrix_temp7, 1, dimention);
+	file << endl << "matrix_temp6" << endl;
+	print_matrix_to_file(&file, matrix_temp6, dimention, 1);
+	file << endl << "matrix_temp8" << endl;
+	print_matrix_to_file(&file, matrix_temp8, dimention, dimention);
+	file << endl;
+	file.close();
+}
+
+void print_matrix_process1() {
+	ofstream file;
+	file.open("process1.txt");
+	file << "matrix_B" << endl;
+	print_matrix_to_file(&file, matrix_B, dimention, 1);
+	file << endl << "matrix_B1" << endl;
+	print_matrix_to_file(&file, matrix_B1, dimention, 1);
+	file << endl << "matrix_temp1" << endl;
+	print_matrix_to_file(&file, matrix_temp1, dimention, 1);
+	file << endl << "matrix_C1" << endl;
+	print_matrix_to_file(&file, matrix_C1, dimention, 1);
+	file << endl << "matrix_temp2" << endl;
+	print_matrix_to_file(&file, matrix_temp2, dimention, 1);
+	file << endl << "matrix_A1" << endl;
+	print_matrix_to_file(&file, matrix_A1, dimention, dimention);
+	file << endl << "matrix_Y2" << endl;
+	print_matrix_to_file(&file, matrix_Y2, dimention, 1);
+	file << endl << "matrix_temp4" << endl;
+	print_matrix_to_file(&file, matrix_temp4, dimention, dimention);
+	file << endl << "matrix_Y1" << endl;
+	print_matrix_to_file(&file, matrix_Y1, dimention, 1);
+	file << endl << "matrix_temp5" << endl;
+	print_matrix_to_file(&file, matrix_temp5, dimention, 1);
+	file << endl << "matrix_temp6" << endl;
+	print_matrix_to_file(&file, matrix_temp6, dimention, 1);
+	file << endl << "matrix_temp8" << endl;
+	print_matrix_to_file(&file, matrix_temp8, dimention, dimention);
+	file << endl << "matrix_Y3" << endl;
+	print_matrix_to_file(&file, matrix_Y3, dimention, dimention);
+	file << endl << "matrix_temp9" << endl;
+	print_matrix_to_file(&file, matrix_temp9, 1, dimention);
+	file << endl << "matrix_temp11" << endl;
+	print_matrix_to_file(&file, matrix_temp11, dimention, dimention);
+	file << endl << "matrix_temp12" << endl;
+	print_matrix_to_file(&file, matrix_temp12, dimention, dimention);
+	file << endl << "matrix_temp13" << endl;
+	print_matrix_to_file(&file, matrix_temp13, dimention, 1);
+	file << endl << "matrix_temp14" << endl;
+	print_matrix_to_file(&file, matrix_temp14, 1, dimention);
+	file << endl << "matrix_temp10" << endl;
+	print_matrix_to_file(&file, matrix_temp10, 1, dimention);
+	file << endl << "matrix_X" << endl;
+	print_matrix_to_file(&file, matrix_X, 1, dimention);
+	file << endl;
+	file.close();
+}
+
+void print_matrix_process2() {
+	ofstream file;
+	file.open("process2.txt");
+	file << "matrix_C2" << endl;
+	print_matrix_to_file(&file, matrix_C2, dimention, dimention);
+	file << endl << "matrix_B2" << endl;
+	print_matrix_to_file(&file, matrix_B2, dimention, dimention);
+	file << endl << "matrix_temp3" << endl;
+	print_matrix_to_file(&file, matrix_temp3, dimention, dimention);
+	file << endl << "matrix_A2" << endl;
+	print_matrix_to_file(&file, matrix_A2, dimention, dimention);
+	file << endl << "matrix_Y3" << endl;
+	print_matrix_to_file(&file, matrix_Y3, dimention, dimention);
+	file << endl << "matrix_temp4" << endl;
+	print_matrix_to_file(&file, matrix_temp4, dimention, dimention);
+	file << endl << "matrix_Y2" << endl;
+	print_matrix_to_file(&file, matrix_Y2, dimention, 1);
+	file << endl << "matrix_temp10" << endl;
+	print_matrix_to_file(&file, matrix_temp10, 1, dimention);
+	file << endl << "matrix_Y1" << endl;
+	print_matrix_to_file(&file, matrix_Y1, dimention, 1);
+	file << endl << "matrix_temp11" << endl;
+	print_matrix_to_file(&file, matrix_temp11, dimention, dimention);
+	file << endl;
+	file.close();
+}
+
+void delete_matrix_process0() {
+	delete_matrix(matrix_A, dimention);
+	delete_matrix(matrix_A1, dimention);
+	delete_matrix(matrix_A2, dimention);
+	delete_matrix(matrix_B2, dimention);
+	delete_matrix(matrix_B1, dimention);
+	delete_matrix(matrix_C1, dimention);
+	delete_matrix(matrix_B, dimention);
+	delete_matrix(matrix_Y1, dimention);
+	delete_matrix(matrix_temp7, 1);
+	delete_matrix(matrix_temp6, dimention);
+	delete_matrix(matrix_temp8, dimention);
+}
+
+void delete_matrix_process1() {
+	delete_matrix(matrix_B, dimention);
+	delete_matrix(matrix_B1, dimention);
+	delete_matrix(matrix_temp1, dimention);
+	delete_matrix(matrix_C1, dimention);
+	delete_matrix(matrix_temp2, dimention);
+	delete_matrix(matrix_A1, dimention);
+	delete_matrix(matrix_Y2, dimention);
+	delete_matrix(matrix_temp4, dimention);
+	delete_matrix(matrix_Y1, dimention);
+	delete_matrix(matrix_temp5, dimention);
+	delete_matrix(matrix_temp6, dimention);
+	delete_matrix(matrix_temp8, dimention);
+	delete_matrix(matrix_Y3, dimention);
+	delete_matrix(matrix_temp9, dimention);
+	delete_matrix(matrix_temp11, dimention);
+	delete_matrix(matrix_temp12, dimention);
+	delete_matrix(matrix_temp13, dimention);
+	delete_matrix(matrix_temp14, 1);
+	delete_matrix(matrix_temp10, 1);
+	delete_matrix(matrix_X, 1);
+}
+
+void delete_matrix_process2() {
+	delete_matrix(matrix_C2, dimention);
+	delete_matrix(matrix_B2, dimention);
+	delete_matrix(matrix_temp3, dimention);
+	delete_matrix(matrix_A2, dimention);
+	delete_matrix(matrix_Y3, dimention);
+	delete_matrix(matrix_temp4, dimention);
+	delete_matrix(matrix_Y2, dimention);
+	delete_matrix(matrix_temp10, 1);
+	delete_matrix(matrix_Y1, dimention);
+	delete_matrix(matrix_temp11, dimention);
+}
+
 void do_process0() {
 	create_and_fill_input_matrixes("matrixes.txt");
 	MPI_Status status;
@@ -520,7 +688,7 @@ void do_process0() {
 		MPI_Recv(matrix_B[i], 1, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD, &status);
 	
 	for (int i = 0; i < dimention; i++)
-		MPI_Send(matrix_A1, dimention, MPI_INT, 1, tag1++, MPI_COMM_WORLD);
+		MPI_Send(matrix_A1[i], dimention, MPI_INT, 1, tag1++, MPI_COMM_WORLD);
 
 	create_matrix_y1();
 	create_matrix_temp7();
@@ -539,6 +707,9 @@ void do_process0() {
 
 	for (int i = 0; i < dimention; i++)
 		MPI_Send(matrix_temp8[i], dimention, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
+
+	print_matrix_process0();
+	delete_matrix_process0();
 }
 
 void do_process1() {
@@ -580,7 +751,7 @@ void do_process1() {
 	for (int i = 0; i < dimention; i++)
 		MPI_Recv(matrix_Y1[i], 1, MPI_DOUBLE, 0, tag0++, MPI_COMM_WORLD, &status);
 	for (int i = 0; i < dimention; i++)
-		MPI_Send(matrix_Y2, 1, MPI_INT, 2, tag2++, MPI_COMM_WORLD);
+		MPI_Send(matrix_Y2[i], 1, MPI_INT, 2, tag2++, MPI_COMM_WORLD);
 
 	create_vatrix_temp5();
 	create_matrix_temp6();
@@ -611,11 +782,13 @@ void do_process1() {
 
 	create_matrix(matrix_temp10, 1, dimention);
 
-	MPI_Recv(matrix_temp10[0], dimention, MPI_DOUBLE, 2, tag2++, MPI_COMM_WORLD, &status);
+	MPI_Recv(matrix_temp10[0], dimention, MPI_INT, 2, tag2++, MPI_COMM_WORLD, &status);
 
 	create_matrix_X();
 
-	print_matrix(matrix_X, 1, dimention);
+	
+	print_matrix_process1();
+	delete_matrix_process1();
 }
 
 void do_process2() {
@@ -661,5 +834,8 @@ void do_process2() {
 	for (int i = 0; i < dimention; i++)
 		MPI_Send(matrix_temp11[i], dimention, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
 
-	MPI_Send(matrix_temp10[0], dimention, MPI_DOUBLE, 1, tag1++, MPI_COMM_WORLD);
+	MPI_Send(matrix_temp10[0], dimention, MPI_INT, 1, tag1++, MPI_COMM_WORLD);
+
+	print_matrix_process2();
+	delete_matrix_process2();
 }
